@@ -1,4 +1,5 @@
 int password[] = {0, 0, 0, 0};
+int numWrongPassword = 0;
 
 void setup() {
   // put your setup code here, to run once:
