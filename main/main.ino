@@ -15,6 +15,7 @@ int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
 // ##########################################
 
 Servo doorLock;
+LiquidCrystal lcd(44, 45, 46, 47, 48, 49); //LCD 연결
 
 void setup() {
   // put your setup code here, to run once:
@@ -23,9 +24,11 @@ void setup() {
   }
   lcd.begin(16,2);
   doorLock.attach(pinDoorlock);
+  lockSafe();
 
   pinMode(okbuttonPin, INPUT);
   pinMode(resetbuttonPin, INPUT);
+  Serial.begin(9600);
 }
 
 
@@ -40,21 +43,19 @@ void loop() {
   if (isOKButtonPressed()){
     if (isCorrectPassword()) {
       unlockSafe();
-    } else {
-      lockSafe();
     }
     delay(100); // 디버깅
   }
-  if (resetButtonPressed()&&isopen) {
-    while (1) {
-      readresetPassword();
-      displayresetPassword(); // 상호님 '초기화'가 뜨며 가변 저항 값 표시
-      if (isOKButtonPressed) {
-        break;
-      }
-    }
-    delay(100); // 디버깅
-  }
+  // if (resetButtonPressed()&&isopen) {
+  //   while (1) {
+  //     readresetPassword();
+  //     displayresetPassword(); // 상호님 '초기화'가 뜨며 가변 저항 값 표시
+  //     if (isOKButtonPressed) {
+  //       break;
+  //     }
+  //   }
+  //   delay(100); // 디버깅
+  // }
 }
 
 void displayPassword(){
@@ -63,10 +64,15 @@ void displayPassword(){
   lcd.print("Enter Password");
   lcd.setCursor(0,1);
   for(int i=0; i<4; i++){
-    lcd.print("[ ");
+    lcd.print("[");
     lcd.print(password[i]);
-    lcd.print(" ]");
+    lcd.print("]");
+
+    Serial.print(password[i]);
   }
+  
+  Serial.println();
+  delay(1000);
 }
 
 void displayjudgePassword(){
@@ -82,7 +88,7 @@ void displayjudgePassword(){
     lcd.print("Wrong Password");
     lcd.setCursor(0,1);
     lcd.print("Wrong "); // 틀린 횟수 출력
-    lcd.print(WrongCount);
+    lcd.print(cntWrongPassword);
     lcd.print(" time(s)");
     delay(2000);
   }
@@ -96,7 +102,7 @@ void readPassword() {
 }
 
 bool isOKButtonPressed() {
-  return digitalRead(okbuttonPin) == LOW;
+  return digitalRead(okbuttonPin) == HIGH;
 }
 
 bool isCorrectPassword() {
@@ -110,7 +116,7 @@ bool isCorrectPassword() {
 }
 
 bool resetButtonPressed() {
-  return digitalRead(resetbuttonPin) == LOW;
+  return digitalRead(resetbuttonPin) == HIGH;
 }
 
 void readresetPassword() {
@@ -119,3 +125,6 @@ void readresetPassword() {
     set_password[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
   }
 }
+
+void lockSafe() { doorLock.write(90); }
+void unlockSafe() { doorLock.write(0); }
