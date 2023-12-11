@@ -1,6 +1,11 @@
 #include <LiquidCrystal.h>
 #include <Servo.h>
 
+enum Status {
+  CLOSED,
+  OPEN,
+};
+
 int password[] = {0, 0, 0, 0};
 int set_password[] = {0, 0, 0, 0};
 int cntWrongPassword = 0;
@@ -46,16 +51,6 @@ void loop() {
     }
     delay(100); // 디버깅
   }
-  // if (resetButtonPressed()&&isopen) {
-  //   while (1) {
-  //     readresetPassword();
-  //     displayresetPassword(); // 상호님 '초기화'가 뜨며 가변 저항 값 표시
-  //     if (isOKButtonPressed) {
-  //       break;
-  //     }
-  //   }
-  //   delay(100); // 디버깅
-  // }
 }
 
 void displayPassword(){
