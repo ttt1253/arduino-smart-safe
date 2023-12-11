@@ -1,4 +1,5 @@
 #include <LiquidCrystal.h>
+#include <Servo.h>
 
 int password[] = {0, 0, 0, 0};
 int numWrongPassword = 0;
@@ -15,6 +16,7 @@ void setup() {
     pinMode(potenpin[i], INPUT);
   }
   lcd.begin(16,2);
+  doorLock.attach(11);
 
   pinMode(okbuttonPin, INPUT);
   pinMode(resetbuttonPin, INPUT);
@@ -31,9 +33,9 @@ void loop() {
   // 3. 버튼이 눌리면 비밀번호가 맞는지 확인한다.
   if (isOKButtonPressed()){
     if (isCorrectPassword()) {
-      lockSafe();
-    } else {
       unlockSafe();
+    } else {
+      lockSafe();
     }
     delay(100); // 디버깅
   }
