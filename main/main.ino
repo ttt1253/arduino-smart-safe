@@ -2,18 +2,18 @@
 #include <Servo.h>
 
 int password[] = {0, 0, 0, 0};
-int numWrongPassword = 0;
-int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
 int set_password[] = {0, 0, 0, 0};
-int okbuttonPin = 2;
-int resetbuttonPin = 3;
-int WrongCount = 0;
+int cntWrongPassword = 0;
+
 int isopen = 1;
 
 // ##############  핀 정의  ###################
 int pinDoorlock = 11;
-
+int okbuttonPin = 2;
+int resetbuttonPin = 3;
+int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
 // ##########################################
+
 Servo doorLock;
 
 void setup() {
@@ -85,6 +85,8 @@ void displayjudgePassword(){
     lcd.print(WrongCount);
     lcd.print(" time(s)");
     delay(2000);
+  }
+}
 
 void readPassword() {
   for (int i = 0; i < 4; i++) {
@@ -100,7 +102,7 @@ bool isOKButtonPressed() {
 bool isCorrectPassword() {
   for (int i = 0; i < 4; i++) {
     if (set_password[i] != password[i]) {
-      WrongCount ++;
+      cntWrongPassword++;
       return false;
     }
   }
