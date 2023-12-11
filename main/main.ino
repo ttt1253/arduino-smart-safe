@@ -10,13 +10,19 @@ int resetbuttonPin = 3;
 int WrongCount = 0;
 int isopen = 1;
 
+// ##############  핀 정의  ###################
+int pinDoorlock = 11;
+
+// ##########################################
+Servo doorLock;
+
 void setup() {
   // put your setup code here, to run once:
   for (int i = 0; i < 4; i++) {
     pinMode(potenpin[i], INPUT);
   }
   lcd.begin(16,2);
-  doorLock.attach(11);
+  doorLock.attach(pinDoorlock);
 
   pinMode(okbuttonPin, INPUT);
   pinMode(resetbuttonPin, INPUT);
