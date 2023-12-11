@@ -15,7 +15,6 @@ void setup() {
 
 }
 
-
 void loop() {
   // 1. 사용자의 비밀번호 확인
   readPassword();
@@ -29,24 +28,6 @@ void loop() {
   } else {
     unlockSafe();
   }
-}
-
-
-void readPassword() {
-  for (int i = 0; i < 4; i++) {
-    int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    password[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
-  }
-}
-
-bool isCorrectPassword() {
-  for (int i = 0; i < 4; i++) {
-    if (set_password[i] != password[i]) {
-      return false;
-      WrongCount++;
-    }
-  }
-  return true;
 }
 
 void displayPassword(){
