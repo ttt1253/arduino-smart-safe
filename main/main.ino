@@ -6,17 +6,41 @@ enum Status {
   OPEN,
 };
 
+// 비동기 딜레이를 위한 타이머
+class Timer {
+public:
+  Timer(int millis) {
+    period = millis;
+  }
+
+  bool isPassed() {
+    int currentTime = millis();
+    return currentTime - prevTime >= period;
+  }
+
+  void reset() { prevTime = millis(); }
+
+private:
+  int prevTime;
+  int period;
+};
+
 int password[] = {0, 0, 0, 0};
 int set_password[] = {0, 0, 0, 0};
 int cntWrongPassword = 0;
 
 int isopen = 1;
+Status staus = CLOSED;
 
 // ##############  핀 정의  ###################
 int pinDoorlock = 11;
 int okbuttonPin = 2;
 int resetbuttonPin = 3;
 int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
+// ##########################################
+
+// ############## 타이머 #####################
+
 // ##########################################
 
 Servo doorLock;
