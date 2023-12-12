@@ -2,8 +2,9 @@
 #include <Servo.h>
 
 enum Status {
-  CLOSED,       // 금고가 잠긴 상태
-  OPEN,         // 금고가 열린 상태
+  LOCKED,       // 금고가 잠긴 상태
+  CLOSED,       // 금고 문이 닫힌 상태
+  OPEN,         // 금고 문이 열린 상태
   RESET,        // 비밀번호 초기화
 };
 
@@ -20,16 +21,17 @@ public:
     return currentTime - prevTime >= period;
   }
 
-  void reset() { prevTime = millis(); }
+  void begin() { prevTime = millis(); }
 
 private:
   int prevTime;
   int period;
+  bool stopped = false;
 };
 
 // ############## 금고 변수 ###################
-int password[] = {0, 0, 0, 0};
-int set_password[] = {0, 0, 0, 0};
+int userPassword[] = {0, 0, 0, 0};
+int safePassword[] = {0, 0, 0, 0};
 int cntWrongPassword = 0;
 Status status = CLOSED;
 // ###########################################
@@ -43,6 +45,7 @@ int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
 
 // ############## 타이머 #####################
 Timer timDebug(1000);
+Timer timSafeClose(5000);
 // ##########################################
 
 Servo doorLock;
@@ -73,8 +76,25 @@ void loop() {
 void run(Status status) {
   switch (status) {
     case OPEN:
+      // TODO(희웅): 닫힌 상태 판단
+      if (isSafeClosed()) {
+        timSafeClose.begin();
+        
+        status = CLOSED;
+        return;        
+      } else {
+        
+      }
       break;
     case CLOSED:
+      if (timSafeClose.isPassed()) {
+        lockSafe();
+
+        status = LOCKED;
+        return;
+      }
+      break;
+    case LOCKED:
       readPassword();
       displayPassword();
       if (isOKButtonPressed()){
@@ -84,8 +104,23 @@ void run(Status status) {
         else if(cntWrongPassword == 5) warning();
         delay(100); // 디버깅
       }
+      if (isResetButtonPressed()) {
+        if (isCorrectPassword()) {
+          status = RESET;
+          return;
+        }
+      }
       break;
     case RESET:
+      readPassword();
+      // TODO(상호): 비밀번호 초기화 안내 문구
+      displayResetPassword();
+      if (isOKButtonPressed()) {
+        resetPassword();
+
+        status = LOCKED;
+        return;
+      }
       break;
     default:
       break;
@@ -100,15 +135,15 @@ void displayPassword(){
   lcd.setCursor(0,1);
   for(int i=0; i<4; i++){
     lcd.print("[");
-    lcd.print(password[i]);
+    lcd.print(userPassword[i]);
     lcd.print("]");
   }
   
   // 1초마다 디버깅
   if (timDebug.isPassed()) {
-    for (int i=0; i<4; i++) Serial.print(password[i]);
+    for (int i=0; i<4; i++) Serial.print(userPassword[i]);
     Serial.println();
-    timDebug.reset();
+    timDebug.begin();
   }
 }
 
@@ -131,10 +166,21 @@ void displayjudgePassword(){
   }
 }
 
+// TODO(상호): 비밀번호 초기화 LCD 화면
+void displayResetPassword() {
+
+}
+
+void resetPassword() {
+  for (int i=0; i<4; i++) {
+    safePassword[i] = userPassword[i];
+  }
+}
+
 void readPassword() {
   for (int i = 0; i < 4; i++) {
     int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    password[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
+    userPassword[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
   }
 }
 
@@ -157,7 +203,7 @@ bool isOKButtonPressed() {
 
 bool isCorrectPassword() {
   for (int i = 0; i < 4; i++) {
-    if (set_password[i] != password[i]) {
+    if (safePassword[i] != userPassword[i]) {
       cntWrongPassword++;
       return false;
     }
@@ -165,15 +211,13 @@ bool isCorrectPassword() {
   return true;
 }
 
-bool resetButtonPressed() {
+bool isResetButtonPressed() {
   return digitalRead(resetbuttonPin) == HIGH;
 }
 
-void readresetPassword() {
-  for (int i = 0; i < 4; i++) {
-    int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    set_password[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
-  }
+// TODO(희웅): 현재 금고 문이 닫힌 상태인지 판단한다.
+bool isSafeClosed() {
+  return true;
 }
 
 void lockSafe() { doorLock.write(90); }
