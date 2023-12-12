@@ -9,6 +9,7 @@ enum Status {
 // 비동기 딜레이를 위한 타이머
 class Timer {
 public:
+  Timer() {}
   Timer(int millis) {
     period = millis;
   }
@@ -40,7 +41,7 @@ int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
 // ##########################################
 
 // ############## 타이머 #####################
-
+Timer timDebug(1000);
 // ##########################################
 
 Servo doorLock;
@@ -58,6 +59,9 @@ void setup() {
   pinMode(okbuttonPin, INPUT);
   pinMode(resetbuttonPin, INPUT);
   Serial.begin(9600);
+
+  // 타이머 정의
+  timDebug = Timer(1000);
 }
 
 
@@ -86,12 +90,14 @@ void displayPassword(){
     lcd.print("[");
     lcd.print(password[i]);
     lcd.print("]");
-
-    Serial.print(password[i]);
   }
   
-  Serial.println();
-  delay(1000);
+  // 1초마다 디버깅
+  if (timDebug.isPassed()) {
+    for (int i=0; i<4; i++) Serial.print(password[i]);
+    Serial.println();
+    timDebug.reset();
+  }
 }
 
 void displayjudgePassword(){
