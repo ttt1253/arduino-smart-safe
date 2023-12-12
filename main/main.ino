@@ -2,8 +2,9 @@
 #include <Servo.h>
 
 enum Status {
-  CLOSED,
-  OPEN,
+  CLOSED,       // 금고가 잠긴 상태
+  OPEN,         // 금고가 열린 상태
+  RESET,        // 비밀번호 초기화
 };
 
 // 비동기 딜레이를 위한 타이머
@@ -26,12 +27,12 @@ private:
   int period;
 };
 
+// ############## 금고 변수 ###################
 int password[] = {0, 0, 0, 0};
 int set_password[] = {0, 0, 0, 0};
 int cntWrongPassword = 0;
-
-int isopen = 1;
-Status staus = CLOSED;
+Status status = CLOSED;
+// ###########################################
 
 // ##############  핀 정의  ###################
 int pinDoorlock = 11;
@@ -66,21 +67,34 @@ void setup() {
 
 
 void loop() {
-  // 1. 사용자의 비밀번호 확인
-  readPassword();
+  run(status);
+}
 
-  // 2. LCD에 표시
-  displayPassword();
-
-  // 3. 버튼이 눌리면 비밀번호가 맞는지 확인한다. 오류메시지 추가
-  if (isOKButtonPressed()){
-    if (isCorrectPassword()) {
-      unlockSafe();
-    }
-    else if(cntWrongPassword == 5) warning();
-    delay(100); // 디버깅
+void run(Status status) {
+  switch (status) {
+    case OPEN:
+      break;
+    case CLOSED:
+      // 1. 사용자의 비밀번호 확인
+      readPassword();
+      // 2. LCD에 표시
+      displayPassword();
+      // 3. 버튼이 눌리면 비밀번호가 맞는지 확인한다. 오류메시지 추가
+      if (isOKButtonPressed()){
+        if (isCorrectPassword()) {
+          unlockSafe();
+        }
+        else if(cntWrongPassword == 5) warning();
+        delay(100); // 디버깅
+      }
+      break;
+    case RESET:
+      break;
+    default:
+      break;
   }
 }
+
 
 void displayPassword(){
   lcd.clear();
