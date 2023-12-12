@@ -44,11 +44,12 @@ void loop() {
   // 2. LCD에 표시
   displayPassword();
 
-  // 3. 버튼이 눌리면 비밀번호가 맞는지 확인한다.
+  // 3. 버튼이 눌리면 비밀번호가 맞는지 확인한다. 오류메시지 추가
   if (isOKButtonPressed()){
     if (isCorrectPassword()) {
       unlockSafe();
     }
+    else if(cntWrongPassword == 5) warning();
     delay(100); // 디버깅
   }
 }
@@ -93,6 +94,19 @@ void readPassword() {
   for (int i = 0; i < 4; i++) {
     int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
     password[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
+  }
+}
+
+void warning(){ // 5회 틀릴 시 오류메시지 표시
+  for(int s; s<10; s++){
+    lcd.setCursor(0,0);
+    lcd.print("Warning");
+    lcd.setCursor(0,1);
+    lcd.print("Try again after "); // 틀린 횟수 출력
+    lcd.print("s");
+    lcd.print("seconds");
+    delay(1000);
+    cntWrongPassword = 0;
   }
 }
 
