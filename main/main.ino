@@ -18,6 +18,7 @@ bool isSafeClosed() {
     return true;
   } else {
     return false;
+  }
 }
 
 //이 밑의 코드는 5초 이상 닫힘 감지시 닫히는 코드
