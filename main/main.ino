@@ -226,8 +226,19 @@ bool isResetButtonPressed() {
 
 // TODO(희웅): 현재 금고 문이 닫힌 상태인지 판단한다.
 bool isSafeClosed() {
-  return true;
+  long duration, distance;
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+  if (distance <= detect) {
+    return true;
+  } else {
+    return false;
+  }
 }
+
 
 void lockSafe() { doorLock.write(90); }
 void unlockSafe() { doorLock.write(0); }
