@@ -114,6 +114,7 @@ void loop() {
       displayPassword();
       if (isOKButtonPressed()){
         if (isCorrectPassword()) {
+          Serial.println("잠금을 해제합니다.");
           unlockSafe();
           timSafeClose.begin();
           status = CLOSED;
@@ -219,7 +220,7 @@ void resetPassword() {
 void readPassword() {
   for (int i = 0; i < 4; i++) {
     int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    userPassword[i] = map(readpin, 30, 1000, 0, 9); // 가변저항 값 대입
+    userPassword[i] = map(readpin, -30, 1000, 0, 9); // 가변저항 값 대입
   }
 }
 
@@ -279,9 +280,9 @@ bool isSafeClosed() {
 }
 
 bool isRFIDTagged() { 
-  bool tagged = !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial();
+  bool notTagged = !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial();
   delay(200);
-  return tagged;
+  return !notTagged;
 }
 
 bool isCorrectRFIDTag() {
