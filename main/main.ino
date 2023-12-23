@@ -171,7 +171,10 @@ void displayjudgePassword(){
 
 // TODO(상호): 비밀번호 초기화 LCD 화면
 void displayResetPassword() {
-
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Reset Password");
+  delay(1000);
 }
 
 void resetPassword() {
