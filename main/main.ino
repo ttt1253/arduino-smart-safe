@@ -183,7 +183,7 @@ void resetPassword() {
 void readPassword() {
   for (int i = 0; i < 4; i++) {
     int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    userPassword[i] = map(readpin, 0, 1000, 0, 9); // 가변저항 값 대입
+    userPassword[i] = map(readpin, 30, 1000, 0, 9); // 가변저항 값 대입
   }
 }
 
