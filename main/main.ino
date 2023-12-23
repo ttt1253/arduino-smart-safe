@@ -70,10 +70,6 @@ void setup() {
 
 
 void loop() {
-  run(status);
-}
-
-void run(Status status) {
   switch (status) {
     case OPEN:
       // TODO(희웅): 닫힌 상태 판단
@@ -107,8 +103,10 @@ void run(Status status) {
         else if(cntWrongPassword == 5) warning();
         delay(100); // 디버깅
       }
+
       if (isResetButtonPressed()) {
         if (isCorrectPassword()) {
+          
           status = RESET;
           return;
         }
@@ -129,7 +127,6 @@ void run(Status status) {
       break;
   }
 }
-
 
 void displayPassword(){
   lcd.clear();
