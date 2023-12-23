@@ -42,7 +42,8 @@ int pinDoorlock = 11;
 int okbuttonPin = 2;
 int resetbuttonPin = 3;
 int trigPin = 9;
-int echoPin = 10;
+int echoPin = 10
+int shockPin = A5;
 int potenpin[] = {A4, A1, A2, A3}; // 가변저항 핀
 // ##########################################
 
