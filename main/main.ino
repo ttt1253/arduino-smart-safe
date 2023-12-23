@@ -5,6 +5,7 @@ enum Status {
   LOCKED,       // 금고가 잠긴 상태
   CLOSED,       // 금고 문이 닫힌 상태
   OPEN,         // 금고 문이 열린 상태
+  WRONG,        // 비밀번호를 여러번 틀린 상태
   RESET,        // 비밀번호 초기화
 };
 
@@ -48,7 +49,7 @@ Timer timDebug(1000);
 Timer timSafeClose(5000);
 int trigPin = 9;
 int echoPin = 10;
-int detect = 10; //cm
+int detect = 11; //cm
 // ##########################################
 
 Servo doorLock;
@@ -104,8 +105,14 @@ void loop() {
       if (isOKButtonPressed()){
         if (isCorrectPassword()) {
           unlockSafe();
+          timSafeClose.begin();
+          status = CLOSED;
         }
-        else if(cntWrongPassword == 5) warning();
+        else if (cntWrongPassword >=5) {
+          status = WRONG;
+          Serial.println("경고 문구를 표시합니다.");
+          return;
+        }
         delay(100); // 디버깅
       }
 
@@ -116,6 +123,11 @@ void loop() {
           return;
         }
       }
+      break;
+    case WRONG:
+      warning();
+      status = LOCKED;
+      Serial.println("경고 문구 표시 완료");
       break;
     case RESET:
       readPassword();
@@ -143,13 +155,6 @@ void displayPassword(){
     lcd.print(userPassword[i]);
     lcd.print("]");
   }
-  
-  // 1초마다 디버깅
-  if (timDebug.isPassed()) {
-    for (int i=0; i<4; i++) Serial.print(userPassword[i]);
-    Serial.println();
-    timDebug.begin();
-  }
 }
 
 void displayjudgePassword(){
@@ -176,7 +181,12 @@ void displayResetPassword() {
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Reset Password");
-  delay(1000);
+  lcd.setCursor(0,1);
+  for(int i=0; i<4; i++){
+    lcd.print("[");
+    lcd.print(userPassword[i]);
+    lcd.print("]");
+  }
 }
 
 void resetPassword() {
@@ -192,28 +202,30 @@ void readPassword() {
   }
 }
 
-void warning(){ // 5회 틀릴 시 오류메시지 표시
-  for(int s; s<10; s++){
+void warning(){
+  for(int s=10; s>0; s--){
+    lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Warning");
     lcd.setCursor(0,1);
-    lcd.print("Try again after "); // 틀린 횟수 출력
-    lcd.print("s");
-    lcd.print("seconds");
+    lcd.print("Try after "); // 틀린 횟수 출력
+    lcd.print(s);
     delay(1000);
-    cntWrongPassword = 0;
-    password[i] = map(readpin, 30, 1000, 0, 9); // 가변저항 값 대입3
   }
+  cntWrongPassword = 0;
 }
 
 bool isOKButtonPressed() {
-  return digitalRead(okbuttonPin) == HIGH;
+  bool pressed = digitalRead(okbuttonPin) == HIGH;
+  delay(200);
+  return pressed;
 }
 
 bool isCorrectPassword() {
   for (int i = 0; i < 4; i++) {
     if (safePassword[i] != userPassword[i]) {
       cntWrongPassword++;
+      Serial.println(cntWrongPassword);
       return false;
     }
   }
@@ -232,6 +244,12 @@ bool isSafeClosed() {
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distance = duration * 0.034 / 2;
+  
+
+  // 1초마다 디버깅
+  if (timDebug.isPassed()) {
+    timDebug.begin();
+  }
   if (distance <= detect) {
     return true;
   } else {
