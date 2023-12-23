@@ -171,7 +171,19 @@ void displayResetPassword() {
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Reset Password");
-  delay(1000);
+  lcd.setCursor(0,1);
+  for(int i=0; i<4; i++){
+    lcd.print("[");
+    lcd.print(userPassword[i]);
+    lcd.print("]");
+  }
+  
+  // 1초마다 디버깅
+  if (timDebug.isPassed()) {
+    for (int i=0; i<4; i++) Serial.print(userPassword[i]);
+    Serial.println();
+    timDebug.begin();
+  }
 }
 
 void resetPassword() {
