@@ -42,14 +42,15 @@ int pinDoorlock = 11;
 int okbuttonPin = 2;
 int resetbuttonPin = 3;
 int trigPin = 9;
-int echoPin = 10
-int shockPin = A5;
+int echoPin = 10;
+int shockPin = 4;
 int potenpin[] = {A4, A1, A2, A3}; // 가변저항 핀
 // ##########################################
 
 // ############## 타이머 #####################
 Timer timDebug(1000);
 Timer timSafeClose(5000);
+Timer timOKButton(2000);
 int detect = 11; //cm
 // ##########################################
 
@@ -69,6 +70,7 @@ void setup() {
   pinMode(resetbuttonPin, INPUT);
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+  pinMode(shockPin, INPUT);
   Serial.begin(9600);
 
   // 타이머 정의
@@ -114,7 +116,6 @@ void loop() {
           Serial.println("경고 문구를 표시합니다.");
           return;
         }
-        delay(100); // 디버깅
       }
 
       if (isResetButtonPressed()) {
@@ -124,6 +125,10 @@ void loop() {
           return;
         }
       }
+
+      int shock = digitalRead(shockPin);
+      if (shock == LOW) Serial.println("Shock Detected");
+      
       break;
     case WRONG:
       warning();
@@ -217,9 +222,10 @@ void warning(){
 }
 
 bool isOKButtonPressed() {
-  bool pressed = digitalRead(okbuttonPin) == HIGH;
-  delay(200);
-  return pressed;
+  if (!timOKButton.isPassed()) return false;
+  
+  timOKButton.begin();
+  return digitalRead(okbuttonPin) == HIGH;
 }
 
 bool isCorrectPassword() {
