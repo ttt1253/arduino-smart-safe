@@ -33,14 +33,14 @@ private:
 int userPassword[] = {0, 0, 0, 0};
 int safePassword[] = {0, 0, 0, 0};
 int cntWrongPassword = 0;
-Status status = CLOSED;
+Status status = LOCKED;
 // ###########################################
 
 // ##############  핀 정의  ###################
 int pinDoorlock = 11;
 int okbuttonPin = 2;
 int resetbuttonPin = 3;
-int potenpin[] = {A0, A1, A2, A3}; // 가변저항 핀
+int potenpin[] = {A4, A1, A2, A3}; // 가변저항 핀
 // ##########################################
 
 // ############## 타이머 #####################
@@ -82,11 +82,14 @@ void run(Status status) {
         
         status = CLOSED;
         return;        
-      } else {
-        
       }
       break;
     case CLOSED:
+      if (!isSafeClosed()) {
+        status = OPEN;
+        return;
+      }
+      
       if (timSafeClose.isPassed()) {
         lockSafe();
 
@@ -180,7 +183,7 @@ void resetPassword() {
 void readPassword() {
   for (int i = 0; i < 4; i++) {
     int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    userPassword[i] = map(readpin, 0, 1023, 0, 9); // 가변저항 값 대입
+    userPassword[i] = map(readpin, 0, 1000, 0, 9); // 가변저항 값 대입
   }
 }
 
