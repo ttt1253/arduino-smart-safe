@@ -46,6 +46,9 @@ int potenpin[] = {A4, A1, A2, A3}; // 가변저항 핀
 // ############## 타이머 #####################
 Timer timDebug(1000);
 Timer timSafeClose(5000);
+int trigPin = 9;
+int echoPin = 10;
+int detect = 10; //cm
 // ##########################################
 
 Servo doorLock;
@@ -62,6 +65,8 @@ void setup() {
 
   pinMode(okbuttonPin, INPUT);
   pinMode(resetbuttonPin, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
   Serial.begin(9600);
 
   // 타이머 정의
@@ -197,6 +202,7 @@ void warning(){ // 5회 틀릴 시 오류메시지 표시
     lcd.print("seconds");
     delay(1000);
     cntWrongPassword = 0;
+    password[i] = map(readpin, 30, 1000, 0, 9); // 가변저항 값 대입3
   }
 }
 
