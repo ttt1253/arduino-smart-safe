@@ -117,6 +117,7 @@ void loop() {
           unlockSafe();
           timSafeClose.begin();
           status = CLOSED;
+          return;
         }
         else if (cntWrongPassword >=5) {
           status = WRONG;
@@ -133,6 +134,16 @@ void loop() {
           return;
         }
       }
+
+      if (isRFIDTagged()) {
+        if (isCorrectRFIDTag()) {
+          unlockSafe();
+          timSafeClose.begin();
+          status = CLOSED;
+          return;
+        }
+      }
+
       break;
     case WRONG:
       warning();
@@ -267,11 +278,21 @@ bool isSafeClosed() {
   }
 }
 
+bool isRFIDTagged() { 
+  bool tagged = !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial();
+  delay(200);
+  return tagged;
+}
+
+bool isCorrectRFIDTag() {
+  return rc522.uid.uidByte[0]==0x69 && 
+        rc522.uid.uidByte[1]==0x90 && 
+        rc522.uid.uidByte[2]==0xFD &&
+        rc522.uid.uidByte[3]==0xA3;
+}
 
 void lockSafe() { doorLock.write(90); }
 void unlockSafe() { doorLock.write(0); }
-<<<<<<< HEAD
-=======
 
 void checkRfid(){
   if ( !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial() ) { 
@@ -300,4 +321,3 @@ void checkRfid(){
   delay(100);
 }
 
->>>>>>> d84e324 (RFID 기능 추가)
