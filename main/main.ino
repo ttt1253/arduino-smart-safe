@@ -1,5 +1,16 @@
 #include <LiquidCrystal.h>
 #include <Servo.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#include <SoftwareSerial.h>
+
+#define RST_PIN   5
+#define SS_PIN    53
+#define BT_RX     15
+#define BT_TX     14
+
+MFRC522 rc522(SS_PIN, RST_PIN);
+SoftwareSerial bluetooth(BT_RX, BT_TX);
 
 enum Status {
   LOCKED,       // 금고가 잠긴 상태
@@ -69,9 +80,13 @@ void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   Serial.begin(9600);
+  bluetooth.begin(9600);
 
   // 타이머 정의
   timDebug = Timer(1000);
+
+  SPI.begin();
+  rc522.PCD_Init(); 
 }
 
 
@@ -103,26 +118,41 @@ void loop() {
       readPassword();
       displayPassword();
       if (isOKButtonPressed()){
+        Serial.println("OK 버튼을 눌렀습니다.");
         if (isCorrectPassword()) {
+          Serial.println("잠금을 해제합니다.");
           unlockSafe();
           timSafeClose.begin();
           status = CLOSED;
+          return;
         }
         else if (cntWrongPassword >=5) {
           status = WRONG;
           Serial.println("경고 문구를 표시합니다.");
+          bluetooth.println("경고! 5회 이상 비밀번호를 틀렸습니다.");
           return;
         }
         delay(100); // 디버깅
       }
 
       if (isResetButtonPressed()) {
+        Serial.println("리셋 버튼이 눌렸습니다.");
         if (isCorrectPassword()) {
           
           status = RESET;
           return;
         }
       }
+
+      if (isRFIDTagged()) {
+        if (isCorrectRFIDTag()) {
+          unlockSafe();
+          timSafeClose.begin();
+          status = CLOSED;
+          return;
+        }
+      }
+
       break;
     case WRONG:
       warning();
@@ -198,7 +228,7 @@ void resetPassword() {
 void readPassword() {
   for (int i = 0; i < 4; i++) {
     int readpin = analogRead(potenpin[i]); // 가변저항 값 읽기
-    userPassword[i] = map(readpin, 30, 1000, 0, 9); // 가변저항 값 대입
+    userPassword[i] = map(readpin, -30, 1000, 0, 9); // 가변저항 값 대입
   }
 }
 
@@ -225,6 +255,7 @@ bool isCorrectPassword() {
   for (int i = 0; i < 4; i++) {
     if (safePassword[i] != userPassword[i]) {
       cntWrongPassword++;
+      Serial.print("잘못된 비밀번호를 입력했습니다: ");
       Serial.println(cntWrongPassword);
       return false;
     }
@@ -257,6 +288,49 @@ bool isSafeClosed() {
   }
 }
 
+bool isRFIDTagged() { 
+  bool notTagged = !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial();
+  delay(200);
+  return !notTagged;
+}
+
+bool isCorrectRFIDTag() {
+  return rc522.uid.uidByte[0]==0x69 && 
+        rc522.uid.uidByte[1]==0x90 && 
+        rc522.uid.uidByte[2]==0xFD &&
+        rc522.uid.uidByte[3]==0xA3;
+}
 
 void lockSafe() { doorLock.write(90); }
-void unlockSafe() { doorLock.write(0); }
+void unlockSafe() { 
+  doorLock.write(0);
+  bluetooth.println("잠금해제되었습니다.");
+}
+
+void checkRfid(){
+  if ( !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial() ) { 
+    //카드 또는 ID 가 읽히지 않으면 return을 통해 다시 시작하게 됩니다.
+    delay(500);
+    return;
+  }  
+  for (byte i = 0; i < 4; i++) {
+    Serial.print(rc522.uid.uidByte[i]);
+    Serial.print(" ");
+  }
+  Serial.println(" ");
+
+  if(rc522.uid.uidByte[0]==0x69 && rc522.uid.uidByte[1]==0x90 && rc522.uid.uidByte[2]==0xFD 
+    && rc522.uid.uidByte[3]==0xA3) {  // 여기에 CARD UID 를 자신의 카드에 맞는 값으로 변경해주세요
+    
+    Serial.println("<< OK !!! >>  Registered card...");
+    status = OPEN;
+    delay(500);
+  }
+  else{
+    Serial.println("<< WARNING !!! >>  This card is not registered");
+    delay(500);
+  }
+
+  delay(100);
+}
+
