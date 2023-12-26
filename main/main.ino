@@ -2,11 +2,15 @@
 #include <Servo.h>
 #include <SPI.h>
 #include <MFRC522.h>
+#include <SoftwareSerial.h>
 
 #define RST_PIN   5
 #define SS_PIN    53
+#define BT_RX     15
+#define BT_TX     14
 
 MFRC522 rc522(SS_PIN, RST_PIN);
+SoftwareSerial bluetooth(BT_RX, BT_TX);
 
 enum Status {
   LOCKED,       // 금고가 잠긴 상태
@@ -76,6 +80,7 @@ void setup() {
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   Serial.begin(9600);
+  bluetooth.begin(9600);
 
   // 타이머 정의
   timDebug = Timer(1000);
@@ -113,6 +118,7 @@ void loop() {
       readPassword();
       displayPassword();
       if (isOKButtonPressed()){
+        Serial.println("OK 버튼을 눌렀습니다.");
         if (isCorrectPassword()) {
           Serial.println("잠금을 해제합니다.");
           unlockSafe();
@@ -123,12 +129,14 @@ void loop() {
         else if (cntWrongPassword >=5) {
           status = WRONG;
           Serial.println("경고 문구를 표시합니다.");
+          bluetooth.println("경고! 5회 이상 비밀번호를 틀렸습니다.");
           return;
         }
         delay(100); // 디버깅
       }
 
       if (isResetButtonPressed()) {
+        Serial.println("리셋 버튼이 눌렸습니다.");
         if (isCorrectPassword()) {
           
           status = RESET;
@@ -247,6 +255,7 @@ bool isCorrectPassword() {
   for (int i = 0; i < 4; i++) {
     if (safePassword[i] != userPassword[i]) {
       cntWrongPassword++;
+      Serial.print("잘못된 비밀번호를 입력했습니다: ");
       Serial.println(cntWrongPassword);
       return false;
     }
@@ -293,7 +302,10 @@ bool isCorrectRFIDTag() {
 }
 
 void lockSafe() { doorLock.write(90); }
-void unlockSafe() { doorLock.write(0); }
+void unlockSafe() { 
+  doorLock.write(0);
+  bluetooth.println("잠금해제되었습니다.");
+}
 
 void checkRfid(){
   if ( !rc522.PICC_IsNewCardPresent() || !rc522.PICC_ReadCardSerial() ) { 
